@@ -1,0 +1,106 @@
+
+
+
+# replace words of which the count is less than 5 with _RARE_
+
+def replace_rare_words(train_file):
+	input=open(train_file,'r')
+	word_list=[]
+	word_dict={}
+	tag_dict={}
+	for line in input:
+		word_list.append(line)
+		word=line.split()
+		if word!=[]:
+			word_count=word_dict.get(word[0],0)
+			tag_count=tag_dict.get(word[1],0)
+			if word_count==0:
+				word_dict[word[0]]=1
+			else:
+				word_dict[word[0]]+=1
+			if tag_count==0:
+				tag_dict[word[1]]=1
+			else:
+				tag_dict[word[1]]+=1
+
+
+	input.close()
+	
+	input=open(train_file,'w')
+	
+	for line in word_list:
+		word=line.split()
+		if word!=[]:
+			if word_dict[word[0]]<5:
+				i=word_list.index(line)
+				word_list[i]='_RARE_ '+word[1]+'\n'
+
+	input.writelines(word_list)
+	input.flush()
+	input.close()
+
+	return tag_dict
+
+
+# count emission parameters with new generated gene.counts
+
+def count_emission(count_file,tag_dict):
+	emission_dict={}
+	input=open(count_file,'r')
+	for line in input:
+		word=line.split()
+		if word!=[]:
+			if word[1]=='WORDTAG':
+				emission=int(word[0])/tag_dict[word[2]]
+				emission_dict[(word[2],word[3])]=emission
+
+
+	input.close()
+	return emission_dict
+
+
+def simple_tagger(emission_dict,tag_dict,train_file):
+	input=open(train_file,'r')
+	word_dict={}
+	for line in input:
+		word=line.split()
+		if word!=[]:
+			word_count=word_dict.get(word[0],0)
+			if word_count==0:
+				word_dict[word[0]]=1
+			else:
+				word_dict[word[0]]+=1
+		
+
+	input.close()
+
+	opt_tag_dict={}
+	for word in word_dict:
+		prob=-1
+		for tag in tag_dict:
+			if emission_dict.get((tag,word),0)>prob:
+				opt_tag=tag
+				if emission_dict.get((tag,word),0)==0:
+					prob=0
+				else:
+					prob=emission_dict[(tag,word)]
+		opt_tag_dict[word]=opt_tag
+
+	return opt_tag_dict,word_dict
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+	
+
